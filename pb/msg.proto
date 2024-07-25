@@ -1,0 +1,39 @@
+syntax = "proto3";  // Proto协议
+package pb; // 当前包名
+
+option csharp_namespace = "pb"; // 给C#提供的选项
+option go_package = "./;pb";
+
+// MsgID: 1
+// 同步玩家本次登录的ID(用来标识玩家), 玩家登陆之后，由Server端主动生成玩家ID发送给客户端
+// 发起者： Server
+// Pid: 玩家ID
+message SyncPid{
+  int32  Pid = 1;
+}
+
+// MsgID: 3
+// 移动的坐标数据
+// 发起者： Client
+// P: Position类型，地图的左边点
+message Position{
+  float X = 1;  // X轴坐标
+  float Y = 2;  // 垂直坐标
+  float Z = 3;  // 原来的Y轴坐标
+  float V = 4;  // 侧身坐标(角度)
+}
+
+// MsgID: 200
+// 广播消息
+// 发起者： Server
+// Tp: 1 世界聊天, 2 坐标, 3 动作, 4 移动之后坐标信息更新
+// Pid: 玩家ID
+message BroadCast{
+  int32 Pid = 1;
+  int32 Tp = 2;
+  oneof Data {
+    string Content = 3;
+    Position P = 4;
+    int32 ActionData = 5;
+  }
+}
