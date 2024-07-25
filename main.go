@@ -31,6 +31,8 @@ func playerOnline(connection ziface.IConnection) {
 	core.WorldMgrObj.AddPlayer(player)
 	// 将pid和connection绑定
 	player.Connection.SetProperty("pid", player.Pid)
+	// 将自己的位置同步给周围玩家
+	player.SyncSurrounding()
 
 	fmt.Println("[PLAYER-ONLINE] Player has online, the Pid is:", player.Pid)
 }
