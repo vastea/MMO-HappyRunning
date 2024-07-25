@@ -110,11 +110,7 @@ func (p *Player) Talk(content string) {
 // SyncSurrounding 同步玩家上线的位置消息
 func (p *Player) SyncSurrounding() {
 	// 1-获取当前玩家周围的玩家有哪些
-	pids := WorldMgrObj.aoiMgr.GetPIDsByPos(p.X, p.Z)
-	players := make([]*Player, 0, len(pids))
-	for _, pid := range pids {
-		players = append(players, WorldMgrObj.GetPlayerByPid(int32(pid)))
-	}
+	players := p.GetSurroundingPlayers()
 	// 2-将当前玩家的位置信息通过MsgID：200发送给周围玩家(让其他玩家看到自己)
 	// 2.1-组建MsgID为200的消息
 	protoMsg := &pb.BroadCast{
@@ -135,7 +131,7 @@ func (p *Player) SyncSurrounding() {
 	}
 	// 3-将周围的全部玩家的位置信息发送给当前的玩家客户端(让自己看到其他玩家)
 	// 3.1-组建MsgID为202的消息
-	playerPos := make([]*pb.Player, 0, len(pids))
+	playerPos := make([]*pb.Player, 0, len(players))
 	for _, player := range players {
 		PlayerPosProtoMsg := &pb.Player{
 			Pid: player.Pid,
@@ -153,4 +149,54 @@ func (p *Player) SyncSurrounding() {
 	}
 	// 3.2-将组建好的数据发送给当前玩家的客户端
 	p.SendMessage(202, protoMsg202)
+}
+
+func (p *Player) UpdatePos(protoPosition *pb.Position) {
+	// 更新当前player对象的坐标
+	p.X = protoPosition.X
+	p.Y = protoPosition.Y
+	p.Z = protoPosition.Z
+	p.V = protoPosition.V
+	// 组建MsgID：200的proto广播协议
+	protoMsg200 := &pb.BroadCast{
+		Pid: p.Pid,
+		Tp:  4,
+		Data: &pb.BroadCast_P{
+			P: &pb.Position{
+				X: p.X,
+				Y: p.Y,
+				Z: p.Z,
+				V: p.V,
+			},
+		},
+	}
+	// 获取当前玩家的周边玩家
+	players := p.GetSurroundingPlayers()
+	// 一次给每个玩家对应的客户端发送位置更新的消息
+	for _, player := range players {
+		player.SendMessage(200, protoMsg200)
+	}
+}
+
+// GetSurroundingPlayers 获取玩家周围的所有玩家
+func (p *Player) GetSurroundingPlayers() []*Player {
+	pids := WorldMgrObj.aoiMgr.GetPIDsByPos(p.X, p.Z)
+	players := make([]*Player, 0, len(pids))
+	for _, pid := range pids {
+		players = append(players, WorldMgrObj.GetPlayerByPid(int32(pid)))
+	}
+	return players
+}
+
+func (p *Player) Offline() {
+	// 将玩家从世界中删除
+	WorldMgrObj.RemovePlayerByPid(p.Pid)
+	// 将离线消息发送给周围玩家的客户端
+	msg201 := &pb.SyncPid{
+		Pid: p.Pid,
+	}
+	players := p.GetSurroundingPlayers()
+	for _, sPlayer := range players {
+		sPlayer.SendMessage(201, msg201)
+	}
 }

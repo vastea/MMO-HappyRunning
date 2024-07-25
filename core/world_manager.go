@@ -59,6 +59,11 @@ func (wm *WorldManager) GetAllPlayers() []*Player {
 	return players
 }
 
+// GetAoiManager 获取AOI地图管理模块
+func (wm *WorldManager) GetAoiManager() *AOIManager {
+	return wm.aoiMgr
+}
+
 func init() {
 	WorldMgrObj = &WorldManager{
 		// 创建世界AOI地图规划

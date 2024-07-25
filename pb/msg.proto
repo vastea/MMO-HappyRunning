@@ -4,8 +4,8 @@ package pb; // 当前包名
 option csharp_namespace = "pb"; // 给C#提供的选项
 option go_package = "./;pb";
 
-// MsgID: 1
-// 同步玩家本次登录的ID(用来标识玩家), 玩家登陆之后，由Server端主动生成玩家ID发送给客户端
+// MsgID: 1 -- 同步玩家本次登录的ID(用来标识玩家), 玩家登陆之后，由Server端主动生成玩家ID发送给客户端
+// MsgID: 201 -- 广播消息 掉线/aoi消失在视野
 // 发起者： Server
 // Pid: 玩家ID
 message SyncPid{

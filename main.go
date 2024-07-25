@@ -13,13 +13,15 @@ func main() {
 	server := znet.NewServer()
 	// 链接创建和销毁的hook函数
 	server.SetOnConnectionStart(playerOnline)
+	server.SetOnConnectionStop(playerOffline)
 	// 注册路由
 	server.AddRouter(2, &apis.WorldChat{})
+	server.AddRouter(3, &apis.Move{})
 	// 启动服务
 	server.Serve()
 }
 
-// OnConnectionAdd 当前客户端建立连接之后的HOOK函数
+// playerOnline 当前客户端建立连接之后的HOOK函数
 func playerOnline(connection ziface.IConnection) {
 	// 创建一个Player对象
 	player := core.NewPlayer(connection)
@@ -35,4 +37,18 @@ func playerOnline(connection ziface.IConnection) {
 	player.SyncSurrounding()
 
 	fmt.Println("[PLAYER-ONLINE] Player has online, the Pid is:", player.Pid)
+}
+
+// playerOffline 当前客户端建立连接之后的HOOK函数
+func playerOffline(connection ziface.IConnection) {
+	// 获取当前玩家
+	pid, err := connection.GetProperty("pid")
+	if err != nil {
+		fmt.Println("[ERROR] Get connection property error:", err)
+	}
+	player := core.WorldMgrObj.GetPlayerByPid(pid.(int32))
+	// 玩家下线
+	player.Offline()
+
+	fmt.Println("[PLAYER-ONLINE] Player has offline, the Pid is:", player.Pid)
 }
